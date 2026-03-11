@@ -1,0 +1,25 @@
+{
+  "server": {
+    "name": "odata-mcp-proxy",
+    "version": "1.0.0",
+    "description": "MCP server for SAP BTP CF Audit Log Retrieval API"
+  },
+  "apis": [
+    {
+      "name": "audit-log",
+      "destination": "AUDIT_LOG_SERVICE",
+      "pathPrefix": "/auditlog/v2",
+      "csrfProtected": false,
+      "entitySets": [
+        {
+          "entitySet": "AuditLogRecords",
+          "urlPath": "auditlogrecords",
+          "description": "Audit log records for the BTP Cloud Foundry environment — retrieve security events, configuration changes, data access, and data modification logs with time-range filtering and server-side paging (page size 500, use handle parameter for next page)",
+          "category": "audit-logs",
+          "keys": [],
+          "operations": { "list": true, "get": false, "create": false, "update": false, "delete": false }
+        }
+      ]
+    }
+  ]
+}

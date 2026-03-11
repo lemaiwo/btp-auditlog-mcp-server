@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:api.sap.com)",
+      "mcp__claude_ai_sap_documentation__search",
+      "WebFetch(domain:help.sap.com)",
+      "mcp__claude_ai_sap_documentation__fetch",
+      "mcp__claude_ai_SAP_System__discover-sap-data",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebSearch",
+      "WebFetch(domain:community.sap.com)",
+      "WebFetch(domain:blogs.sap.com)",
+      "WebFetch(domain:sap.github.io)",
+      "WebFetch(domain:api.hana.ondemand.com)",
+      "WebFetch(domain:s3-eu-west-1.amazonaws.com)",
+      "mcp__ui5__get_guidelines"
+    ],
+    "defaultMode": "bypassPermissions"
+  }
+}
