@@ -1,6 +1,6 @@
-# BTP MCP Server
+# BTP Audit Log MCP Server
 
-An MCP (Model Context Protocol) server for SAP BTP administration, powered by [odata-mcp-proxy](https://www.npmjs.com/package/odata-mcp-proxy). It exposes BTP Core Services APIs as MCP tools, allowing AI assistants like Claude to manage your BTP landscape through natural language.
+An MCP (Model Context Protocol) server for the SAP BTP Audit Log Retrieval API, powered by [odata-mcp-proxy](https://www.npmjs.com/package/odata-mcp-proxy). It exposes audit log records as MCP tools, allowing AI assistants like Claude to retrieve and analyze security events, configuration changes, data access, and data modification logs through natural language.
 
 The entire server is defined through a single JSON config file -- no custom code required.
 
@@ -17,55 +17,46 @@ AI Assistant (Claude, Cursor, etc.)
         |
         | REST + OAuth2 (via BTP Destination Service)
         v
-  BTP Core Services APIs
+  BTP Audit Log Retrieval API (/auditlog/v2)
 ```
 
 Think of it like the [SAP Application Router](https://www.npmjs.com/package/@sap/approuter) -- a ready-made runtime you configure, not code you write.
 
-## Exposed BTP APIs
+## Exposed API
 
-The config file (`btp-audit-log-api-config.json`) defines three BTP Core Services:
-
-### Account Management
+The config file (`btp-audit-log-api-config.json`) defines the Audit Log Retrieval API:
 
 | Tool | Operations | Description |
 |------|-----------|-------------|
-| `GlobalAccount` | list | View global account details |
-| `Subaccounts` | list, get, create, update, delete | Manage subaccounts |
-| `Directories` | list, get, create, update, delete | Organize subaccounts into directories |
+| `AuditLogRecords` | list | Retrieve security events, configuration changes, data access, and data modification logs |
 
-### Entitlements
+Results use server-side paging with a page size of 500 records. Use the `handle` parameter from the response to fetch the next page.
 
-| Tool | Operations | Description |
-|------|-----------|-------------|
-| `Assignments` | list, update | Manage service plan entitlement assignments |
-| `AllowedDataCenters` | list | View available data centers |
+The `_list` tool supports OData query parameters: `$filter`, `$select`, `$expand`, `$orderby`, `$top`, `$skip`.
 
-### Provisioning
+### Example queries
 
-| Tool | Operations | Description |
-|------|-----------|-------------|
-| `EnvironmentInstances` | list, get, create, delete | Manage runtime environments (e.g. Cloud Foundry orgs) |
-| `AvailableEnvironments` | list | View environment types available for provisioning |
-
-All `_list` tools support OData query parameters: `$filter`, `$select`, `$expand`, `$orderby`, `$top`, `$skip`.
+- List recent audit log entries
+- Filter audit logs by time range
+- Find security-related events
+- Review configuration changes made in the last 24 hours
 
 ## Prerequisites
 
 - **Node.js** 18+ (20+ recommended)
 - **SAP BTP account** with a Cloud Foundry environment
-- **BTP Destinations** configured for the CIS APIs (Accounts, Entitlements, Provisioning) with OAuth2 authentication
+- **BTP Destination** named `AUDIT_LOG_SERVICE` pointing to the Audit Log Retrieval API with OAuth2 authentication
 - **Cloud Foundry CLI** (`cf`) and **MBT Build Tool** (`mbt`) for deployment
 
 ## Project Structure
 
 ```
 btp-auditlog-mcp-server/
-├── package.json                # Start script + odata-mcp-proxy dependency
-├── btp-audit-log-api-config.json   # API configuration (defines all MCP tools)
-├── mta.yaml                    # BTP Cloud Foundry deployment descriptor
-├── xs-security.json            # XSUAA OAuth2 configuration
-├── default-env.json            # Local dev credentials (gitignored)
+├── package.json                       # Start script + odata-mcp-proxy dependency
+├── btp-audit-log-api-config.json      # API configuration (defines all MCP tools)
+├── mta.yaml                           # BTP Cloud Foundry deployment descriptor
+├── xs-security.json                   # XSUAA OAuth2 configuration
+├── default-env.json                   # Local dev credentials (gitignored)
 └── LICENSE
 ```
 
@@ -77,17 +68,15 @@ btp-auditlog-mcp-server/
 npm install
 ```
 
-### 2. Configure BTP destinations
+### 2. Configure BTP destination
 
-Create three BTP Destinations pointing to the CIS APIs:
+Create a BTP Destination for the Audit Log Retrieval API:
 
 | Destination | URL |
 |-------------|-----|
-| `BTP_ACCOUNTS_SERVICE` | `https://accounts-service.cfapps.<region>.hana.ondemand.com` |
-| `BTP_ENTITLEMENTS_SERVICE` | `https://entitlements-service.cfapps.<region>.hana.ondemand.com` |
-| `BTP_PROVISIONING_SERVICE` | `https://provisioning-service.cfapps.<region>.hana.ondemand.com` |
+| `AUDIT_LOG_SERVICE` | `https://auditlog-management.cfapps.<region>.hana.ondemand.com` |
 
-Each destination should use OAuth2 client credentials authentication.
+The destination should use OAuth2 client credentials authentication.
 
 ### 3. Local development
 
@@ -107,7 +96,7 @@ npm run deploy:btp    # Deploy to Cloud Foundry
 ```
 
 The MTA deployment provisions three service instances:
-- **Destination** (lite) -- resolves API endpoints and manages OAuth2 tokens
+- **Destination** (lite) -- resolves the Audit Log API endpoint and manages OAuth2 tokens
 - **Connectivity** (lite) -- enables secure backend connectivity
 - **XSUAA** (application) -- handles OAuth2 authentication with role-based access control
 
@@ -117,7 +106,7 @@ The XSUAA configuration (`xs-security.json`) defines three role templates:
 
 | Role | Scopes | Description |
 |------|--------|-------------|
-| `MCPViewer` | read | Read-only access |
+| `MCPViewer` | read | Read-only access to audit logs |
 | `MCPEditor` | read, write | Read and write access |
 | `MCPAdmin` | read, write, admin | Full administrative access |
 
